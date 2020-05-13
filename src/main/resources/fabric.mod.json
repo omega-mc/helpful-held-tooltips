@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "helpful-held-tooltips",
+  "version": "${version}",
+  "name": "Helpful Held Tooltips",
+  "description": "Adds better tooltips for when you hold an item in your hotbar.",
+  "authors": [
+    "Draylar"
+  ],
+  "license": "MIT",
+  "icon": "assets/helpful-held-tooltips/icon.png",
+  "environment": "*",
+  "mixins": [
+    "helpful-held-tooltips.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.8.2+build.194",
+    "fabric": "*",
+    "minecraft": "1.15.2"
+  }
+}
