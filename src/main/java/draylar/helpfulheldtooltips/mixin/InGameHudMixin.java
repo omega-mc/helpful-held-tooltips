@@ -18,6 +18,9 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,17 +29,24 @@ import java.util.Map;
 @Mixin(InGameHud.class)
 public abstract class InGameHudMixin {
 
-    @Shadow @Final private MinecraftClient client;
+    @Shadow
+    @Final
+    private MinecraftClient client;
 
-    @Shadow private int heldItemTooltipFade;
+    @Shadow
+    private int heldItemTooltipFade;
 
-    @Shadow private ItemStack currentStack;
+    @Shadow
+    private ItemStack currentStack;
 
-    @Shadow private int scaledWidth;
+    @Shadow
+    private int scaledWidth;
 
-    @Shadow public abstract TextRenderer getFontRenderer();
+    @Shadow
+    public abstract TextRenderer getFontRenderer();
 
-    @Shadow private int scaledHeight;
+    @Shadow
+    private int scaledHeight;
 
     /**
      * @author Draylar
@@ -56,7 +66,7 @@ public abstract class InGameHudMixin {
 
             // get enchantments from stack
             Map<Enchantment, Integer> enchantments = new HashMap<>();
-            if(currentStack.hasEnchantments()) {
+            if (currentStack.hasEnchantments()) {
                 enchantments = EnchantmentHelper.getEnchantments(currentStack);
             }
 
@@ -70,7 +80,7 @@ public abstract class InGameHudMixin {
             }
 
             // get opacity information
-            int k = (int)((float)this.heldItemTooltipFade * 256.0F / 10.0F);
+            int k = (int) ((float) this.heldItemTooltipFade * 256.0F / 10.0F);
             if (k > 255) {
                 k = 255;
             }
@@ -89,7 +99,7 @@ public abstract class InGameHudMixin {
 
                 // render tooltip
                 DrawableHelper.fill(var10000, var10001, var10002, y + 9 + 2, this.client.options.getTextBackgroundColor(0));
-                this.getFontRenderer().drawWithShadow(string, (float)x, (float)y, 16777215 + (k << 24));
+                this.getFontRenderer().drawWithShadow(string, (float) x, (float) y, 16777215 + (k << 24));
 
                 // draw enchantments
                 int count = 1;
@@ -111,5 +121,44 @@ public abstract class InGameHudMixin {
         }
 
         this.client.getProfiler().pop();
+    }
+
+    /**
+     * In vanilla, the item name tooltip does not show when switching between items, if the second item:
+     *   - is the same type
+     *   - has the same name
+     *   - is not empty
+     *
+     *  This has the side effect of disabling the tooltip from showing when you switch to a weapon of the same type with different enchantments.
+     *  We fix this by adding a single check for enchantment equality when decrementing the held item tooltip fade.
+     */
+    @Inject(
+            method = "tick",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;getMainHandStack()Lnet/minecraft/item/ItemStack;"),
+            cancellable = true
+    )
+    private void adjustFade(CallbackInfo ci) {
+        ItemStack itemStack = this.client.player.inventory.getMainHandStack();
+
+        // stack is empty, set fade to 100% transparent
+        if (itemStack.isEmpty()) {
+            this.heldItemTooltipFade = 0;
+        }
+
+        // currentStack is not empty, held stack item is same as current item, names match
+        // addition is also checking that enchantments match
+        else if (!this.currentStack.isEmpty() && itemStack.getItem() == this.currentStack.getItem() && itemStack.getName().equals(this.currentStack.getName()) && itemStack.getEnchantments().equals(this.currentStack.getEnchantments())) {
+            if (this.heldItemTooltipFade > 0) {
+                --this.heldItemTooltipFade;
+            }
+        }
+
+        // new item, reset fade to 40 (2 seconds)
+        else {
+            this.heldItemTooltipFade = 40;
+        }
+
+        this.currentStack = itemStack;
+        ci.cancel();
     }
 }
