@@ -1,4 +1,7 @@
 ### Helpful Held Tooltips
+[![CurseForge](http://cf.way2muchnoise.eu/full_383161_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/helpful-held-tooltips)
+[![Curseforge](http://cf.way2muchnoise.eu/versions/For%20MC_383161_all.svg)](https://www.curseforge.com/minecraft/mc-mods/helpful-held-tooltips)
+[![](https://jitpack.io/v/Draylar/helpful-held-tooltips.svg)](https://jitpack.io/#Draylar/helpful-held-tooltips)
 
 Helpful Held Tooltips is a Fabric mod which adds in the item tooltips from bedrock:
 
