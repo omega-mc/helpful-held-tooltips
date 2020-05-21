@@ -9,7 +9,9 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.item.EnchantedBookItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
@@ -69,6 +71,9 @@ public abstract class InGameHudMixin {
             if (currentStack.hasEnchantments()) {
                 enchantments = EnchantmentHelper.getEnchantments(currentStack);
             }
+
+            ListTag storedEnchantments = EnchantedBookItem.getEnchantmentTag(currentStack);
+            enchantments.putAll(EnchantmentHelper.getEnchantments(storedEnchantments));
 
             // get positioning information
             int x = (this.scaledWidth - this.getFontRenderer().getStringWidth(string)) / 2;
