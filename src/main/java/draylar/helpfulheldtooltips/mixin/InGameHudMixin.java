@@ -7,12 +7,14 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.EnchantedBookItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
@@ -54,12 +56,11 @@ public abstract class InGameHudMixin {
      * @author Draylar
      */
     @Overwrite
-    public void renderHeldItemTooltip() {
+    public void renderHeldItemTooltip(MatrixStack matrixStack) {
         this.client.getProfiler().push("selectedItemName");
 
         if (this.heldItemTooltipFade > 0 && !this.currentStack.isEmpty()) {
-            Text text = (new LiteralText("")).append(this.currentStack.getName()).formatted(this.currentStack.getRarity().formatting);
-            String string = text.asFormattedString();
+            MutableText text = new LiteralText("").append(this.currentStack.getName()).formatted(this.currentStack.getRarity().formatting);
 
             // italicize if stack has a custom name
             if (this.currentStack.hasCustomName()) {
@@ -69,14 +70,14 @@ public abstract class InGameHudMixin {
             // get enchantments from stack
             Map<Enchantment, Integer> enchantments = new HashMap<>();
             if (currentStack.hasEnchantments()) {
-                enchantments = EnchantmentHelper.getEnchantments(currentStack);
+                enchantments = EnchantmentHelper.get(currentStack);
             }
 
             ListTag storedEnchantments = EnchantedBookItem.getEnchantmentTag(currentStack);
-            enchantments.putAll(EnchantmentHelper.getEnchantments(storedEnchantments));
+            enchantments.putAll(EnchantmentHelper.fromTag(storedEnchantments));
 
             // get positioning information
-            int x = (this.scaledWidth - this.getFontRenderer().getStringWidth(string)) / 2;
+            int x = (this.scaledWidth - this.getFontRenderer().getWidth(text)) / 2;
             int bottomOffset = 59;
             int enchantmentOffset = enchantments.size() * 12;
             int y = this.scaledHeight - bottomOffset - enchantmentOffset;
@@ -100,11 +101,11 @@ public abstract class InGameHudMixin {
                 // positioning information
                 int var10000 = x - 2;
                 int var10001 = y - 2;
-                int var10002 = x + this.getFontRenderer().getStringWidth(string) + 2;
+                int var10002 = x + this.getFontRenderer().getWidth(text) + 2;
 
                 // render tooltip
-                DrawableHelper.fill(var10000, var10001, var10002, y + 9 + 2, this.client.options.getTextBackgroundColor(0));
-                this.getFontRenderer().drawWithShadow(string, (float) x, (float) y, 16777215 + (k << 24));
+                DrawableHelper.fill(matrixStack, var10000, var10001, var10002, y + 9 + 2, this.client.options.getTextBackgroundColor(0));
+                this.getFontRenderer().drawWithShadow(matrixStack, text, (float) x, (float) y, 16777215 + (k << 24));
 
                 // draw enchantments
                 int count = 1;
@@ -112,9 +113,9 @@ public abstract class InGameHudMixin {
                     Enchantment enchantment = entry.getKey();
                     Integer level = entry.getValue();
 
-                    Text enchantmentText = new LiteralText(new TranslatableText(enchantment.getTranslationKey()).asFormattedString() + " " + new TranslatableText("potion.potency." + (level - 1)).asFormattedString()).formatted(Formatting.GRAY);
-                    x = (this.scaledWidth - this.getFontRenderer().getStringWidth(enchantmentText.asFormattedString())) / 2;
-                    this.getFontRenderer().drawWithShadow(enchantmentText.asFormattedString(), (float) x, (float) y + 12 * count, 16777215 + (k << 24));
+                    Text enchantmentText = new TranslatableText(enchantment.getTranslationKey()).append(" ").append(new TranslatableText("potion.potency." + (level - 1))).formatted(Formatting.GRAY);
+                    x = (this.scaledWidth - this.getFontRenderer().getWidth(enchantmentText)) / 2;
+                    this.getFontRenderer().drawWithShadow(matrixStack, enchantmentText, (float) x, (float) y + 12 * count, 16777215 + (k << 24));
 
                     count++;
                 }
