@@ -113,9 +113,9 @@ public abstract class InGameHudMixin {
                     Enchantment enchantment = entry.getKey();
                     Integer level = entry.getValue();
 
-                    Text enchantmentText = new TranslatableText(enchantment.getTranslationKey()).append(" ").append(new TranslatableText("potion.potency." + (level - 1))).formatted(Formatting.GRAY);
+                    Text enchantmentText = new TranslatableText(enchantment.getTranslationKey()).append(" ").append(new TranslatableText("potion.potency." + (level - 1))).formatted(Formatting.SILVER);
                     x = (this.scaledWidth - this.getFontRenderer().getWidth(enchantmentText)) / 2;
-                    this.getFontRenderer().drawWithShadow(matrixStack, enchantmentText, (float) x, (float) y + 12 * count, 16777215 + (k << 24));
+                    this.getFontRenderer().drawWithShadow(matrixStack, enchantmentText, (float) x, (float) y + 10 * count, 16777215 + (k << 24));
 
                     count++;
                 }
